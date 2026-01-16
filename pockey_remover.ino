@@ -6,8 +6,8 @@ Servo servo_peeler;  // MG996R
 Servo servo_pockey;  // MG90S
 
 // ピン番号の定義
-const int PIN_SLIDER = 8;
 const int PIN_PEELER = 7;
+const int PIN_SLIDER = 8;
 const int PIN_POCKEY = 9;
 
 // 初期角度
@@ -21,6 +21,9 @@ const int PEELER_ANGLE_2 = 90;
 const int POCKEY_ANGLE_1 = 0;
 const int POCKEY_ANGLE_2 = 90;
 const int POCKEY_ANGLE_3 = 180;
+
+// 削って良いかのフラグ
+bool canRemove = false;
 
 // 現在のステップ
 int currentStep = 0;
@@ -49,141 +52,56 @@ void loop() {
   if (Serial.available() > 0) {
     char input = Serial.read();
 
+    // aが送られてきたら自動で動作開始
     if (input == 'a' || input == 'A') {
-      if (currentStep % 2 == 0) {
-        Serial.println("--- ポッキーのチョコレートを削る処理 ---");
-        removeChocolate();
-      } else {
-        Serial.println("--- ポッキーを回す処理 ---");
-        rotatePockey(currentStep);
-      }
-      currentStep++;
-
-      // ステップ11の後は1に戻る
-      if (currentStep > 11) {
-        currentStep = 0;
-        Serial.println();
-        Serial.println("--- 1サイクル完了。次の 'a' でステップ1から再開します ---");
-        Serial.println();
-      }
-
-      // executeStep(currentStep);
-
-      // // ステップ15の後は1に戻る
-      // if (currentStep >= 15) {
-      //   currentStep = 0;
-      //   Serial.println();
-      //   Serial.println("--- 1サイクル完了。次の 'a' でステップ1から再開します ---");
-      //   Serial.println();
-      // }
+      canRemove = true;
     }
+  }
+
+  if (canRemove == false) {
+    return;
+  }
+
+  if (currentStep % 2 == 0) {
+    Serial.println("--- ポッキーのチョコレートを削る処理 ---");
+    removeChocolate();
+  } else {
+    Serial.println("--- ポッキーを回す処理 ---");
+    rotatePockey(currentStep);
+  }
+  currentStep++;
+
+  // ステップ19の後は1に戻る
+  if (currentStep > 19) {
+    currentStep = 0;
+    // 動作をストップ
+    canRemove = false;
+    Serial.println();
+    Serial.println("--- 1サイクル完了。次の 'a' でステップ1から再開します ---");
+    Serial.println();
   }
 }
 
 void removeChocolate() {
   servo_peeler.write(PEELER_ANGLE_2);
   Serial.println("servo_peeler = " + String(PEELER_ANGLE_2) + "度");
-  delay(2000);
+  delay(1000);
   servo_slider.write(SLIDER_ANGLE_2);
   Serial.println("servo_slider = " + String(SLIDER_ANGLE_2) + "度");
-  delay(2000);
+  delay(1000);
   servo_peeler.write(PEELER_ANGLE_1);
   Serial.println("servo_peeler = " + String(PEELER_ANGLE_1) + "度");
-  delay(2000);
+  delay(1000);
   servo_slider.write(SLIDER_ANGLE_1);
   Serial.println("servo_slider = " + String(SLIDER_ANGLE_1) + "度");
   delay(2000);
 }
 
 void rotatePockey(int step) {
-  int deg = 30 + 30 * int(step / 2);
+  int deg = 20 * (1 + int(step / 2));
+  if (deg > 180) {
+    deg = 0;
+  }
   servo_pockey.write(deg);
   Serial.println("servo_pockey = " + String(deg) + "度");
-}
-
-void executeStep(int step) {
-  Serial.print(">>> ステップ ");
-  Serial.print(step);
-  Serial.print(": ");
-
-  switch (step) {
-    case 1:
-      servo_peeler.write(PEELER_ANGLE_2);
-      Serial.println("servo_peeler = " + String(PEELER_ANGLE_2) + "度");
-      break;
-
-    case 2:
-      servo_slider.write(SLIDER_ANGLE_2);
-      Serial.println("servo_slider = " + String(SLIDER_ANGLE_2) + "度");
-      break;
-
-    case 3:
-      servo_peeler.write(PEELER_ANGLE_1);
-      Serial.println("servo_peeler = " + String(PEELER_ANGLE_1) + "度");
-      break;
-
-    case 4:
-      servo_slider.write(SLIDER_ANGLE_1);
-      Serial.println("servo_slider = " + String(SLIDER_ANGLE_1) + "度");
-      break;
-
-    case 5:
-      servo_pockey.write(POCKEY_ANGLE_2);
-      Serial.println("servo_pockey = " + String(POCKEY_ANGLE_2) + "度");
-      break;
-
-    case 6:
-      servo_peeler.write(PEELER_ANGLE_2);
-      Serial.println("servo_peeler = " + String(PEELER_ANGLE_2) + "度");
-      break;
-
-    case 7:
-      servo_slider.write(SLIDER_ANGLE_2);
-      Serial.println("servo_slider = " + String(SLIDER_ANGLE_2) + "度");
-      break;
-
-    case 8:
-      servo_peeler.write(PEELER_ANGLE_1);
-      Serial.println("servo_peeler = " + String(PEELER_ANGLE_1) + "度");
-      break;
-
-    case 9:
-      servo_slider.write(SLIDER_ANGLE_1);
-      Serial.println("servo_slider = " + String(SLIDER_ANGLE_1) + "度");
-      break;
-
-    case 10:
-      servo_pockey.write(POCKEY_ANGLE_3);
-      Serial.println("servo_pockey = " + String(POCKEY_ANGLE_3) + "度");
-      break;
-
-    case 11:
-      servo_peeler.write(PEELER_ANGLE_2);
-      Serial.println("servo_peeler = " + String(PEELER_ANGLE_2) + "度");
-      break;
-
-    case 12:
-      servo_slider.write(SLIDER_ANGLE_2);
-      Serial.println("servo_slider = " + String(SLIDER_ANGLE_2) + "度");
-      break;
-
-    case 13:
-      servo_peeler.write(PEELER_ANGLE_1);
-      Serial.println("servo_peeler = " + String(PEELER_ANGLE_1) + "度");
-      break;
-
-    case 14:
-      servo_slider.write(SLIDER_ANGLE_1);
-      Serial.println("servo_slider = " + String(SLIDER_ANGLE_1) + "度");
-      break;
-
-    case 15:
-      servo_pockey.write(POCKEY_ANGLE_1);
-      Serial.println("servo_pockey = " + String(POCKEY_ANGLE_1) + "度");
-      break;
-
-    default:
-      Serial.println("不明なステップ");
-      break;
-  }
 }
